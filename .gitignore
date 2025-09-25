@@ -1,0 +1,11 @@
+.env
+*.log
+/tmp/
+/dist/
+/build/
+.DS_Store
+*.exe
+*.test
+*.out
+coverage.out
+vendor/

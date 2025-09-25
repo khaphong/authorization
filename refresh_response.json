@@ -1,0 +1,3 @@
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDAwMDAxOTktODE0Yy03ZmUzLTlhOTUtN2ZiODliZWUyYTI5IiwidXNlcm5hbWUiOiJ0ZXN0dXNlciIsInN1YiI6IjAwMDAwMTk5LTgxNGMtN2ZlMy05YTk1LTdmYjg5YmVlMmEyOSIsImV4cCI6MTc1ODgxMzA3NywiaWF0IjoxNzU4ODEyMTc3fQ.gIdzKP0ICZVLqVHgBl8o5OddA3zTRimar1-373cKkfI","refresh_token":"9e4e8563607c946b25c3762b68b6c3389a4430849df31e201fb1cb8ed90bae77","expires_at":"2025-09-25T15:11:17.349948811Z","user":{"id":"00000199-814c-7fe3-9a95-7fb89bee2a29","username":"testuser","email":"test@example.com","created_at":"2025-09-25T14:35:29.124112Z"}}
+
+Status: 200
