@@ -84,16 +84,58 @@ docker-rebuild: docker-down docker-build docker-up ## Rebuild and restart servic
 
 docker-reset: docker-down-volumes docker-up ## Reset everything (remove volumes and restart)
 
-# Database migrations (manual - since we're using GORM AutoMigrate)
-migrate/up: ## Apply database migrations (manual SQL)
-	@echo "Applying database migrations..."
-	@echo "Note: This project uses GORM AutoMigrate. Manual SQL migrations are in migrations/ folder."
-	@echo "To run manually: psql -h localhost -p $(POSTGRES_EXTERNAL_PORT) -U $(DB_USER) -d $(DB_NAME) -f migrations/0001_create_users.up.sql"
+# Database migrations using golang-migrate
+MIGRATE_BIN := $(shell which migrate || echo "$(HOME)/go/bin/migrate")
+# Use localhost and external port for migration from host machine
+MIGRATE_DB_HOST := localhost
+MIGRATE_DB_PORT := $(POSTGRES_EXTERNAL_PORT)
+DATABASE_URL := postgres://$(DB_USER):$(DB_PASS)@$(MIGRATE_DB_HOST):$(MIGRATE_DB_PORT)/$(DB_NAME)?sslmode=disable
+MIGRATIONS_DIR := db/migrations
 
-migrate/down: ## Rollback database migrations (manual SQL)
-	@echo "Rolling back database migrations..."
-	@echo "Note: This project uses GORM AutoMigrate. Manual SQL migrations are in migrations/ folder."
-	@echo "To run manually: psql -h localhost -p $(POSTGRES_EXTERNAL_PORT) -U $(DB_USER) -d $(DB_NAME) -f migrations/0002_create_refresh_tokens.down.sql"
+migrate-install: ## Install golang-migrate tool
+	@echo "Installing golang-migrate..."
+	@go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+migrate-create: ## Create a new migration file (usage: make migrate-create name=migration_name)
+	@if [ -z "$(name)" ]; then \
+		echo "Error: Please provide a migration name. Usage: make migrate-create name=migration_name"; \
+		exit 1; \
+	fi
+	@echo "Creating migration: $(name)"
+	@$(MIGRATE_BIN) create -ext sql -dir $(MIGRATIONS_DIR) -seq $(name)
+
+migrate-up: ## Apply all pending migrations
+	@echo "Applying database migrations..."
+	@echo "Using: $(DATABASE_URL)"
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" up
+
+migrate-down: ## Rollback last migration
+	@echo "Rolling back last migration..."
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down 1
+
+migrate-reset: ## Rollback all migrations
+	@echo "Rolling back all migrations..."
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down
+
+migrate-version: ## Show current migration version
+	@echo "Current migration version:"
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" version
+
+migrate-force: ## Force migration version (usage: make migrate-force version=1)
+	@if [ -z "$(version)" ]; then \
+		echo "Error: Please provide a version. Usage: make migrate-force version=1"; \
+		exit 1; \
+	fi
+	@echo "Forcing migration version to: $(version)"
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" force $(version)
+
+migrate-goto: ## Go to specific migration version (usage: make migrate-goto version=1)
+	@if [ -z "$(version)" ]; then \
+		echo "Error: Please provide a version. Usage: make migrate-goto version=1"; \
+		exit 1; \
+	fi
+	@echo "Going to migration version: $(version)"
+	@$(MIGRATE_BIN) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" goto $(version)
 
 # Dependencies
 deps: ## Download and tidy dependencies

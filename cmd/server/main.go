@@ -3,7 +3,6 @@ package main
 import (
 	"authorization/internal/config"
 	"authorization/internal/handler"
-	"authorization/internal/model"
 	"authorization/internal/pkg/logger"
 	"authorization/internal/server"
 	"authorization/internal/service"
@@ -136,12 +135,11 @@ func initDatabase(databaseURL string) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
-	// Auto-migrate the schema
-	if err := db.AutoMigrate(&model.User{}, &model.RefreshToken{}); err != nil {
-		return nil, fmt.Errorf("failed to migrate database: %w", err)
-	}
-
-	logger.Info("Database connected and migrated successfully")
+	// Note: Database schema is managed by golang-migrate migrations
+	// Run: make migrate-up to apply migrations
+	// Migration files are in db/migrations/ directory
+	logger.Info("Database connected successfully")
+	logger.Info("Run 'make migrate-up' to apply database migrations")
 
 	return db, nil
 }
